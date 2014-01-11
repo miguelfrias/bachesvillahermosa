@@ -8,11 +8,12 @@
     RB = (function () {
         var mapOptions, 
             map,
+            mapEl,
             marker,
             geocoder,
             bache = {
-                lat: '',
-                lng: '',
+                lat: 0,
+                lng: 0,
                 address: '',
                 dateCreated: '',
                 fixInProgress: false,
@@ -20,7 +21,7 @@
                 timesReported: 0,
                 severity: 0
             },
-            mapEl;
+            markers = [];
 
         function _loadGoogleMaps (callback, mapElement) {
 
@@ -47,10 +48,57 @@
                 mapOptions
             );
 
-            google.maps.event.addListener(map, 'click', mapEventHandler);
+            _loadBaches();
+
+            google.maps.event.addListener(map, 'click', _mapEventHandler);
         }
 
-        function mapEventHandler(e) {
+        function _loadBaches() {
+            var bachesJSON,
+                i = 0;
+
+            ajax('data/data.json', function (response) {
+
+                bachesJSON = response.response;
+
+                if (bachesJSON) {
+
+                    bachesJSON = JSON.parse(bachesJSON);
+
+                    var bachesJSONLength = bachesJSON.length;
+
+                    if (bachesJSONLength) {
+
+                        var i = 0;
+
+                        for (i ; i < bachesJSONLength; i++) {
+
+                            markers[i] = new google.maps.Marker({
+                                animation: google.maps.Animation.DROP,
+                                draggable: false,
+                                position: new google.maps.LatLng(bachesJSON[i].lat, bachesJSON[i].lng),
+                                map: map,
+                            });
+
+                        }
+                    }
+
+                }
+
+            });
+
+        }
+
+        function _createMarker(latLng) {
+            marker = new google.maps.Marker({
+                animation: google.maps.Animation.DROP,
+                draggable: false,
+                position: latLng,
+                map: map,
+            });
+        }
+
+        function _mapEventHandler(e) {
                 
             //console.log(e);
             var latLng = e.latLng,
@@ -82,7 +130,6 @@
                     var address = results[0];
 
                     if (address) {
-                        //console.log(address.formatted_address);
 
                         bache = {
                             lat: latLng.ob,
@@ -121,6 +168,8 @@
 
                     baches = localStorage.getItem('baches');
                     baches = (baches) ? JSON.parse(baches) : [];
+
+                    console.log(bache);
 
                     baches.push(bache);
 
