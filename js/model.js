@@ -20,10 +20,11 @@
                 timesReported: 0,
                 severity: 0
             },
-            mapEl = doc.getElementById('map-canvas'),
-            reportButton = document.getElementById('report-bache');
+            mapEl;
 
-        function _loadGoogleMaps (callback) {
+        function _loadGoogleMaps (callback, mapElement) {
+
+            mapEl = mapElement;
 
             var script = doc.createElement('script');
 
@@ -47,8 +48,6 @@
             );
 
             google.maps.event.addListener(map, 'click', mapEventHandler);
-
-            reportButton.addEventListener('click', reportButtonHandler, false);
         }
 
         function mapEventHandler(e) {
@@ -106,26 +105,35 @@
 
         }
 
-        function reportButtonHandler (e) {
-
-            e.preventDefault();
-
-            saveBache();
-        }
-
-        function saveBache() {
-
-            // Just if a marker is present in the map
-            if (marker && bache) {
-                // TODO: Save this bache to LocalStorage
-            }
-
-        }
-
         return {
             loadGoogleMaps: _loadGoogleMaps,
 
-            initializeMap: _initializeMap
+            initializeMap: _initializeMap,
+
+            saveBache: function (e) {
+                e.preventDefault();
+
+                // Just if a marker is present in the map
+                if (marker && bache) {
+
+                    // TODO: Save this bache to LocalStorage
+                    var baches;
+
+                    baches = localStorage.getItem('baches');
+                    baches = (baches) ? JSON.parse(baches) : [];
+
+                    baches.push(bache);
+
+                    baches = JSON.stringify(baches);
+                    localStorage.setItem('baches', baches);
+
+                    ajax('php/saveJSON.php?baches=' + baches , function () {
+                        console.log('AJAX!!');
+                    });
+
+                }
+
+            }
         }
     })();
 
